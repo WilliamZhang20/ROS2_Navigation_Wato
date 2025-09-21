@@ -1,4 +1,6 @@
 #include "map_memory_core.hpp"
+#include <cmath>
+#include <optional>
 
 namespace robot
 {
@@ -56,29 +58,33 @@ void MapMemoryCore::initializeGlobalMap() {
   global_map_initialized_ = true;
 }
 
-void MapMemoryCore::integrateCostmap(const nav_msgs::msg::Odometry &msg) {
-  // get robot orientation
-  double qx = msg.pose.pose.orientation.x;
-  double qy = msg.pose.pose.orientation.y;
-  double qz = msg.pose.pose.orientation.y;
-  double qw = msg.pose.pose.orientation.w;
+void MapMemoryCore::integrateCostmap(const nav_msgs::msg::Odometry &odom) {
+  // Get robot's orientation
+  double qx = odom.pose.pose.orientation.x;
+  double qy = odom.pose.pose.orientation.y;
+  double qz = odom.pose.pose.orientation.z;
+  double qw = odom.pose.pose.orientation.w;
 
+  // Calculate robot's yaw
   double yaw_temp1 = 2.0 * (qw * qz + qx * qy);
   double yaw_temp2 = 1.0 - 2.0 * (qy * qy + qz * qz);
   double robot_yaw = std::atan2(yaw_temp1, yaw_temp2);
 
-  double robot_x = msg.pose.pose.position.x;
-  double robot_y = msg.pose.pose.position.y;
+  // Get robot's position
+  double robot_x = odom.pose.pose.position.x;
+  double robot_y = odom.pose.pose.position.y;
 
+  // Get costmap info
   double costmap_resolution = latest_costmap_.info.resolution;
   double costmap_origin_x = latest_costmap_.info.origin.position.x;
   double costmap_origin_y = latest_costmap_.info.origin.position.y;
   unsigned int costmap_width = latest_costmap_.info.width;
   unsigned int costmap_height = latest_costmap_.info.height;
 
-  // loop over costmap to integrate with global map
-  for(unsigned int y=0; y<costmap_height; ++y) {
-    for(unsigned int x=0; x<costmap_width; ++x) {
+  // Loop over each points in the costmap to integrate it to the global map
+  for (unsigned int y = 0; y < costmap_height; ++y) {
+    for (unsigned int x = 0; x < costmap_width; ++x) {
+      // Transform from costmap frame to global map frame
       double c_x = costmap_origin_x + (x + 0.5) * costmap_resolution;
       double c_y = costmap_origin_y + (y + 0.5) * costmap_resolution;
 
@@ -115,4 +121,4 @@ bool MapMemoryCore::isWithinBounds(int x, int y) {
   return true;
 }
 
-} 
+}
