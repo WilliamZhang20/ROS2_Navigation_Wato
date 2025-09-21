@@ -15,7 +15,6 @@ class CostmapNode : public rclcpp::Node {
 
   private:
     void inflateObstacles();
-    void inflateObstacles();
 
     void publishCostmap();
 
